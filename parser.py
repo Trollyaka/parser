@@ -1,6 +1,7 @@
 import json
 import re
 import requests
+import os
 from bs4 import BeautifulSoup
 import pandas as pd
 from urllib.parse import urlparse, urljoin
@@ -62,6 +63,12 @@ def parse_html_to_excel(json_file, excel_file):
     df = pd.DataFrame(product_data)
     df.to_excel(excel_file, index=False)
     print(f"Data successfully written to '{excel_file}'")
+
+    try:
+        os.remove(json_file)
+        print(f"Temporary file '{json_file}' deleted.")
+    except OSError as e:
+        print(f"Error deleting file '{json_file}': {e}")
 
 # Function to handle dynamic pagination with loop detection
 def scrape_all_pages(base_url):
