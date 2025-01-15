@@ -5,6 +5,9 @@ import os
 from bs4 import BeautifulSoup
 import pandas as pd
 from urllib.parse import urlparse, urljoin
+from flask import Flask, request, render_template, send_file
+
+app = Flask(__name__)
 
 # Function to validate URL
 def is_valid_url(url):
@@ -62,7 +65,8 @@ def parse_html_to_excel(json_file, excel_file):
 
     df = pd.DataFrame(product_data)
     df.to_excel(excel_file, index=False)
-    print(f"Data successfully written to '{excel_file}'")
+    print(f"Data successfully written to {excel_file}")
+
 
     try:
         os.remove(json_file)
@@ -115,13 +119,21 @@ def scrape_all_pages(base_url):
     return all_html_content
 
 # Main function
-def main():
-    url = input("Enter the URL: ")  # Example URL
-    html_content = scrape_all_pages(url)
+# Route for the home page
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        url = request.form['url']
+        html_content = scrape_all_pages(url)
 
-    if html_content:
-        save_html_to_json(html_content, 'product_data.json')
-        parse_html_to_excel('product_data.json', 'product_data.xlsx')
+        if html_content:
+            save_html_to_json(html_content, 'product_data.json')
+            parse_html_to_excel('product_data.json', 'product_data.xlsx')
+
+            # Serve the Excel file for download
+            return send_file('product_data.xlsx', as_attachment=True)
+
+    return render_template('index.html')
 
 if __name__ == '__main__':
-    main()
+    app.run(debug=True)
